@@ -18,12 +18,19 @@ export function Task() {
   ) {
     event?.target.setCustomValidity('')
     setNewTaskText(event?.target.value)
-    console.log(newTaskText)
+  }
+
+  function handleCreateNewTask() {
+    event?.preventDefault()
+    setTasks([...tasks, newTaskText])
   }
 
   return (
     <div className="sm:w-1/2 w-[90%] mt-20 mx-auto relative -top-28">
-      <div className="flex items-center gap-4 mb-20">
+      <form
+        onSubmit={handleCreateNewTask}
+        className="flex items-center gap-4 mb-20"
+      >
         <Input
           className="max-w-48 h-14 bg-gray_primary-500 border border-gray_primary-700 placeholder:text-gray_primary-300 focus:outline-none focus:border-purple-500"
           placeholder="Adicione uma nova tarefa"
@@ -40,7 +47,7 @@ export function Task() {
           Criar
           <PlusCircle size={24} className="text-gray_primary-100" />
         </Button>
-      </div>
+      </form>
 
       <div className="flex flex-col sm:flex-row items-center justify-between gap-2 border-b border-b-gray_primary-400 pb-6">
         <div className="flex items-center gap-3">
@@ -59,7 +66,15 @@ export function Task() {
         </div>
       </div>
 
-      {tasks.length === 0 ? <TaskNotFound /> : <CardTask />}
+      {tasks.length === 0 ? (
+        <TaskNotFound />
+      ) : (
+        <div>
+          {tasks.map((task) => {
+            return <CardTask key={task} />
+          })}
+        </div>
+      )}
     </div>
   )
 }

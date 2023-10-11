@@ -1,11 +1,22 @@
 import { useState } from 'react'
 import { Trash, Check } from '@phosphor-icons/react'
 
-export function CardTask() {
+interface CardTaskProps {
+  content: string
+  onDeleteTask: (task: string) => void
+  onDoneTask: (taskDone: string) => void
+}
+
+export function CardTask({ content, onDeleteTask, onDoneTask }: CardTaskProps) {
   const [isChecked, setIsChecked] = useState(false)
 
   function handleCheckboxChange() {
     setIsChecked(!isChecked)
+    onDoneTask(content)
+  }
+
+  function handleDeleteTask() {
+    onDeleteTask(content)
   }
 
   return (
@@ -24,15 +35,15 @@ export function CardTask() {
         className={`${
           isChecked &&
           'line-through text-gray_primary-300 transition-all duration-300'
-        } text-gray_primary-100 font-normal`}
+        } text-gray_primary-100 font-normal w-full`}
       >
-        Integer urna interdum massa libero auctor neque turpis turpis semper.
-        Duis vel sed fames integer.
+        {content}
       </p>
       <button>
         <Trash
           size={20}
           className="text-gray_primary-300 hover:text-danger_color-700 transition-all duration-200"
+          onClick={handleDeleteTask}
         />
       </button>
     </div>

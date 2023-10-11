@@ -7,22 +7,43 @@ import { CardTask } from '../Card'
 import { TaskNotFound } from './TaskNotFound'
 
 export function Task() {
-  const [tasks, setTasks] = useState([])
+  const [tasks, setTasks] = useState<string[]>([])
   const [newTaskText, setNewTaskText] = useState('')
+  const [taskCompleted, setTaskCompleted] = useState<number[]>([])
 
   const isNewTaskEmpty = newTaskText.length === 0
   const countTaskCreate = tasks.length > 0
 
-  function handleNewTaskChange(
-    event: ChangeEvent<HTMLElement | HTMLTextAreaElement>,
-  ) {
+  function handleTaskDone(taskToDone: string) {
+    const updatedCompleteTask = [...taskCompleted]
+
+    if (!updatedCompleteTask.includes(taskToDone)) {
+      updatedCompleteTask.push(taskToDone)
+    } else {
+      const taskIndex = updatedCompleteTask.indexOf(taskToDone)
+      updatedCompleteTask.splice(taskIndex, 1)
+    }
+
+    setTaskCompleted(updatedCompleteTask)
+  }
+
+  function handleNewTaskChange(event: ChangeEvent<HTMLInputElement>) {
     event?.target.setCustomValidity('')
     setNewTaskText(event?.target.value)
   }
 
-  function handleCreateNewTask() {
+  function handleCreateNewTask(event: React.FormEvent) {
     event?.preventDefault()
     setTasks([...tasks, newTaskText])
+    setNewTaskText('')
+  }
+
+  function handleDeleteTask(taskToDelete: string) {
+    const deleteTask = tasks.filter((task) => {
+      return task !== taskToDelete
+    })
+
+    setTasks(deleteTask)
   }
 
   return (
@@ -61,7 +82,7 @@ export function Task() {
         <div className="flex items-center gap-3">
           <p className="text-blue_color-600 font-bold text-base">Concluídas</p>
           <span className="bg-gray_primary-400 px-2 rounded-full text-gray_primary-200 font-bold text-base">
-            2 de 5
+            {taskCompleted.length} de {tasks.length}
           </span>
         </div>
       </div>
@@ -70,8 +91,15 @@ export function Task() {
         <TaskNotFound />
       ) : (
         <div>
-          {tasks.map((task) => {
-            return <CardTask key={task} />
+          {tasks.map((task, index) => {
+            return (
+              <CardTask
+                key={index}
+                content={task}
+                onDeleteTask={handleDeleteTask}
+                onDoneTask={() => handleTaskDone(task)}
+              />
+            )
           })}
         </div>
       )}

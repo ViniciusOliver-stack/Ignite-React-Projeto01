@@ -1,4 +1,4 @@
-import { ChangeEvent, useState } from 'react'
+import { ChangeEvent, useEffect, useState } from 'react'
 import { Input } from '../ui/input'
 import { Button } from '../ui/button'
 import { PlusCircle } from '@phosphor-icons/react'
@@ -7,9 +7,30 @@ import { CardTask } from '../Card'
 import { TaskNotFound } from './TaskNotFound'
 
 export function Task() {
-  const [tasks, setTasks] = useState<string[]>([])
+  const [tasks, setTasks] = useState<string[]>(() => {
+    // Ele procurar no LocalStorage por esse no "tasks"
+    const savedTasks = localStorage.getItem('tasks')
+    // Ou ele inicia vazio ou inicializa com algum valor convertendo para array
+    return savedTasks ? JSON.parse(savedTasks) : []
+  })
+
+  const [taskCompleted, setTaskCompleted] = useState<string[]>(() => {
+    // Aqui dentro se repete o mesmo processo de cima.
+    const savedCompletedTasks = localStorage.getItem('completedTasks')
+    return savedCompletedTasks ? JSON.parse(savedCompletedTasks) : []
+  })
+
   const [newTaskText, setNewTaskText] = useState('')
-  const [taskCompleted, setTaskCompleted] = useState<number[]>([])
+
+  useEffect(() => {
+    // Aqui ele vai setar o valor para o localStorage e salvar os valores em formato de string
+    localStorage.setItem('tasks', JSON.stringify(tasks))
+    // Quando os valores mudam o useEffect é acionado e ele atualiza os valores.
+  }, [tasks])
+
+  useEffect(() => {
+    localStorage.setItem('completedTasks', JSON.stringify(taskCompleted))
+  }, [taskCompleted])
 
   const isNewTaskEmpty = newTaskText.length === 0
   const countTaskCreate = tasks.length > 0
@@ -39,21 +60,29 @@ export function Task() {
   }
 
   function handleDeleteTask(taskToDelete: string) {
-    const deleteTask = tasks.filter((task) => {
-      return task !== taskToDelete
-    })
+    const updatedTasks = tasks.filter((task) => task !== taskToDelete)
+    const updatedCompletedTasks = taskCompleted.filter(
+      (task) => task !== taskToDelete,
+    )
+    setTasks(updatedTasks)
+    setTaskCompleted(updatedCompletedTasks)
 
-    setTasks(deleteTask)
+    // Atualiza o localStorage após a exclusão da tarefa
+    localStorage.setItem('tasks', JSON.stringify(updatedTasks))
+    localStorage.setItem(
+      'completedTasks',
+      JSON.stringify(updatedCompletedTasks),
+    )
   }
 
   return (
-    <div className="sm:w-1/2 w-[90%] mt-20 mx-auto relative -top-28">
+    <div className="lg:w-1/2 w-[90%] mt-20 mx-auto relative -top-28">
       <form
         onSubmit={handleCreateNewTask}
-        className="flex items-center gap-4 mb-20"
+        className="flex items-center gap-4 mb-10 sm:mb-20"
       >
         <Input
-          className="max-w-48 h-14 bg-gray_primary-500 border border-gray_primary-700 placeholder:text-gray_primary-300 focus:outline-none focus:border-purple-500"
+          className="max-w-48 h-14 bg-gray_primary-500 border border-gray_primary-700 placeholder:text-gray_primary-300 focus:outline-none focus:border-purple-500 text-gray_primary-200"
           placeholder="Adicione uma nova tarefa"
           required
           onChange={handleNewTaskChange}
@@ -70,7 +99,7 @@ export function Task() {
         </Button>
       </form>
 
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-2 border-b border-b-gray_primary-400 pb-6">
+      <div className="flex flex-row items-center justify-between gap-2 border-b border-b-gray_primary-400 pb-6">
         <div className="flex items-center gap-3">
           <p className="text-blue_color-600 font-bold text-base">
             Tarefas criadas
@@ -92,12 +121,14 @@ export function Task() {
       ) : (
         <div>
           {tasks.map((task, index) => {
+            const isChecked = taskCompleted.includes(task) // Verifica se a tarefa está concluída
             return (
               <CardTask
                 key={index}
                 content={task}
-                onDeleteTask={handleDeleteTask}
+                onDeleteTask={() => handleDeleteTask(task)}
                 onDoneTask={() => handleTaskDone(task)}
+                isChecked={isChecked} // Passa o estado isChecked como propriedade
               />
             )
           })}
